@@ -22,8 +22,9 @@ Aesthetic: minimalist game-menu (inspired by *Deus Ex: Human Revolution*) — mo
 
 ## Deployment
 
-Target: **Cloudflare Pages** connected to the GitHub repo `GlebYavorski/carpemachinatio-home` (same model as the sibling `road_bingo` repo — Pages Git integration, no GitHub Actions workflow).
+Hosted on **Cloudflare as a Worker with static assets** (the newer unified "Workers & Pages" model — NOT a classic Pages project, despite the sibling `road_bingo` being one). Git integration via **Workers Builds** connected to `GlebYavorski/carpemachinatio-home`. No GitHub Actions workflow.
 
-- Static site: no build command, output dir = `/`.
-- Push to `main` → Cloudflare auto-builds and deploys.
-- Custom domain: apex `carpemachinatio.com`, configured in the Pages project's Custom Domains.
+- Static site: no build step, assets served from repo root.
+- Push to `main` → Cloudflare auto-builds and deploys (~30s). Verified working.
+- Custom domain: apex `carpemachinatio.com`, attached in the Worker's **Domains** tab. `www` not configured.
+- **Gotcha:** auto-deploy only works because the Cloudflare GitHub App has access to this repo. If a new repo's pushes don't deploy, check the app's repo access at github.com/settings/installations (grant "All repositories" to avoid per-repo grants).
