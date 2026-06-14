@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>carpe machinatio</title>
+<style>
+  :root {
+    /* dark theme (default / night) */
+    --bg: #0a0a0b;
+    --bg-grad: #131316;
+    --fg: #f4f4f5;
+    --muted: #8a8a92;
+    --line: rgba(244,244,245,0.10);
+    --shape: rgba(244,244,245,0.22);
+    --shape-glow: rgba(244,244,245,0.06);
+    --hover-bg: rgba(244,244,245,0.04);
+  }
+
+  /* light palette — applied by system pref OR explicit data-theme="light" */
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #f4f4f5;
+      --bg-grad: #e6e6e9;
+      --fg: #1a1a1d;
+      --muted: #6b6b73;
+      --line: rgba(26,26,29,0.10);
+      --shape: rgba(26,26,29,0.20);
+      --shape-glow: rgba(26,26,29,0.05);
+      --hover-bg: rgba(26,26,29,0.04);
+    }
+  }
+
+  /* explicit overrides from the toggle — win over system pref */
+  html[data-theme="light"] {
+    --bg: #f4f4f5;
+    --bg-grad: #e6e6e9;
+    --fg: #1a1a1d;
+    --muted: #6b6b73;
+    --line: rgba(26,26,29,0.10);
+    --shape: rgba(26,26,29,0.20);
+    --shape-glow: rgba(26,26,29,0.05);
+    --hover-bg: rgba(26,26,29,0.04);
+  }
+  html[data-theme="dark"] {
+    --bg: #0a0a0b;
+    --bg-grad: #131316;
+    --fg: #f4f4f5;
+    --muted: #8a8a92;
+    --line: rgba(244,244,245,0.10);
+    --shape: rgba(244,244,245,0.22);
+    --shape-glow: rgba(244,244,245,0.06);
+    --hover-bg: rgba(244,244,245,0.04);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body { height: 100%; }
+
+  body {
+    font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+    background: radial-gradient(ellipse at 50% 35%, var(--bg-grad), var(--bg) 75%);
+    color: var(--fg);
+    overflow: hidden;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* animated background canvas */
+  #bg {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* subtle vignette + scanline mood */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background:
+      radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.35) 100%);
+    mix-blend-mode: multiply;
+    opacity: 0.6;
+  }
+
+  .menu {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    padding: 2rem;
+    animation: fadeIn 1.4s ease both;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .brand {
+    font-size: clamp(1.8rem, 5vw, 3.2rem);
+    font-weight: 200;
+    letter-spacing: 0.5em;
+    text-transform: uppercase;
+    padding-left: 0.5em; /* compensate trailing letter-spacing */
+    margin-bottom: 0.4rem;
+  }
+
+  .brand .accent { font-weight: 500; }
+
+  .tagline {
+    font-size: 0.7rem;
+    letter-spacing: 0.45em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 3.5rem;
+    padding-left: 0.45em;
+  }
+
+  nav { display: flex; flex-direction: column; gap: 0.4rem; }
+
+  .item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    min-width: 320px;
+    padding: 0.95rem 2rem;
+    color: var(--fg);
+    text-decoration: none;
+    text-transform: uppercase;
+    letter-spacing: 0.32em;
+    font-size: 0.82rem;
+    font-weight: 300;
+    border: 1px solid var(--line);
+    background: transparent;
+    /* clipped angular corners — Deus Ex style */
+    clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
+    transition: background 0.25s ease, letter-spacing 0.25s ease, color 0.25s ease;
+  }
+
+  .item .label { padding-left: 0.32em; }
+
+  .item .mark {
+    font-size: 0.7rem;
+    color: var(--muted);
+    transition: transform 0.25s ease, color 0.25s ease;
+  }
+
+  .item:hover {
+    background: var(--hover-bg);
+    letter-spacing: 0.4em;
+  }
+
+  .item:hover .mark { transform: translateX(4px); color: var(--fg); }
+
+  .item.disabled {
+    color: var(--muted);
+    cursor: default;
+    pointer-events: none;
+  }
+
+  .item.disabled .mark { font-size: 0.6rem; letter-spacing: 0.2em; }
+
+  footer {
+    position: fixed;
+    bottom: 1.4rem;
+    left: 0; right: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.4rem;
+    font-size: 0.62rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  footer .sep { opacity: 0.4; }
+
+  footer a {
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.25s ease;
+  }
+  footer a:hover { color: var(--fg); }
+  footer a .tg { letter-spacing: 0; text-transform: none; }
+
+  /* theme toggle — angular button, top-right */
+  #theme-toggle {
+    position: fixed;
+    top: 1.4rem;
+    right: 1.4rem;
+    z-index: 3;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    color: var(--fg);
+    border: 1px solid var(--line);
+    clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+    transition: background 0.25s ease;
+  }
+  #theme-toggle:hover { background: var(--hover-bg); }
+</style>
+</head>
+<body>
+  <canvas id="bg"></canvas>
+
+  <button id="theme-toggle" type="button" aria-label="Toggle theme"></button>
+
+  <main class="menu">
+    <h1 class="brand">carpe<span class="accent"> machinatio</span></h1>
+    <p class="tagline">seize the technology</p>
+
+    <nav>
+      <a class="item" href="https://bingo.carpemachinatio.com">
+        <span class="label">Road Bingo</span>
+        <span class="mark">&#9656;</span>
+      </a>
+      <span class="item disabled">
+        <span class="label">More soon</span>
+        <span class="mark">&#9671;</span>
+      </span>
+    </nav>
+  </main>
+
+  <footer>
+    <span>carpemachinatio.com</span>
+    <span class="sep">&#9671;</span>
+    <a href="https://t.me/carpemachinatio" target="_blank" rel="noopener">
+      Telegram <span class="tg">@carpemachinatio</span>
+    </a>
+  </footer>
+
+<script>
+// theme toggle — explicit choice persists, else follow system
+(() => {
+  const root = document.documentElement;
+  const btn = document.getElementById('theme-toggle');
+  const SUN = '☀';   // ☀
+  const MOON = '☽';  // ☽
+  const mq = window.matchMedia('(prefers-color-scheme: dark)');
+
+  function effective() {
+    const set = root.getAttribute('data-theme');
+    return set || (mq.matches ? 'dark' : 'light');
+  }
+  function paintBtn() {
+    // show the glyph for the theme you'd switch TO
+    btn.textContent = effective() === 'dark' ? SUN : MOON;
+  }
+
+  const saved = localStorage.getItem('theme');
+  if (saved === 'dark' || saved === 'light') root.setAttribute('data-theme', saved);
+  paintBtn();
+
+  btn.addEventListener('click', () => {
+    const next = effective() === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    localStorage.setItem('theme', next);
+    paintBtn();
+    window.dispatchEvent(new Event('themechange'));
+  });
+
+  mq.addEventListener('change', paintBtn);
+})();
+
+(() => {
+  const canvas = document.getElementById('bg');
+  const ctx = canvas.getContext('2d');
+  let w, h, dpr, shapes;
+
+  function readColor() {
+    return getComputedStyle(document.documentElement)
+      .getPropertyValue('--shape').trim() || 'rgba(255,255,255,0.2)';
+  }
+  let stroke = readColor();
+
+  function resize() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    w = window.innerWidth;
+    h = window.innerHeight;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    canvas.style.width = w + 'px';
+    canvas.style.height = h + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  // polygon: sides=3 triangle, sides=6 hexagon
+  function makeShape() {
+    const sides = Math.random() < 0.5 ? 3 : 6;
+    return {
+      x: Math.random() * w,
+      y: Math.random() * h,
+      r: 18 + Math.random() * 60,
+      sides,
+      rot: Math.random() * Math.PI * 2,
+      spin: (Math.random() - 0.5) * 0.0035,
+      vx: (Math.random() - 0.5) * 0.18,
+      vy: -0.08 - Math.random() * 0.22,    // drift upward — "floating"
+      alpha: 0.15 + Math.random() * 0.7,
+      lw: Math.random() < 0.3 ? 1.4 : 0.8
+    };
+  }
+
+  function build() {
+    const count = Math.round((w * h) / 42000);
+    shapes = Array.from({ length: Math.max(14, Math.min(48, count)) }, makeShape);
+  }
+
+  function drawPoly(s) {
+    ctx.save();
+    ctx.translate(s.x, s.y);
+    ctx.rotate(s.rot);
+    ctx.beginPath();
+    for (let i = 0; i < s.sides; i++) {
+      const a = (Math.PI * 2 * i) / s.sides - Math.PI / 2;
+      const px = Math.cos(a) * s.r;
+      const py = Math.sin(a) * s.r;
+      i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.globalAlpha = s.alpha;
+    ctx.lineWidth = s.lw;
+    ctx.strokeStyle = stroke;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function tick() {
+    ctx.clearRect(0, 0, w, h);
+    for (const s of shapes) {
+      s.x += s.vx;
+      s.y += s.vy;
+      s.rot += s.spin;
+      // wrap around edges with margin
+      const m = s.r + 10;
+      if (s.y < -m) { s.y = h + m; s.x = Math.random() * w; }
+      if (s.x < -m) s.x = w + m;
+      if (s.x > w + m) s.x = -m;
+      drawPoly(s);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  window.addEventListener('resize', () => { resize(); build(); });
+  window.addEventListener('themechange', () => { stroke = readColor(); });
+  if (window.matchMedia) {
+    window.matchMedia('(prefers-color-scheme: dark)')
+      .addEventListener('change', () => { stroke = readColor(); });
+  }
+
+  resize();
+  build();
+  tick();
+})();
+</script>
+</body>
+</html>
