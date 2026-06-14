@@ -26,5 +26,6 @@ Hosted on **Cloudflare as a Worker with static assets** (the newer unified "Work
 
 - Static site: no build step, assets served from repo root.
 - Push to `main` → Cloudflare auto-builds and deploys (~30s). Verified working.
-- Custom domain: apex `carpemachinatio.com`, attached in the Worker's **Domains** tab. `www` not configured.
+- Custom domain: apex `carpemachinatio.com`, attached in the Worker's **Domains** tab.
+- `www.carpemachinatio.com` → 301 redirect to apex via a zone-level Redirect Rule (wildcard `https://www.*` → `https://${1}`), backed by a proxied `www` CNAME → `carpemachinatio.com`.
 - **Gotcha:** auto-deploy only works because the Cloudflare GitHub App has access to this repo. If a new repo's pushes don't deploy, check the app's repo access at github.com/settings/installations (grant "All repositories" to avoid per-repo grants).
