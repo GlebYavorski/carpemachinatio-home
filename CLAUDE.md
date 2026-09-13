@@ -22,10 +22,19 @@ Aesthetic: minimalist game-menu (inspired by *Deus Ex: Human Revolution*) — mo
 
 ## Deployment
 
-Hosted on **Cloudflare as a Worker with static assets** (the newer unified "Workers & Pages" model — NOT a classic Pages project, despite the sibling `road_bingo` being one). Git integration via **Workers Builds** connected to `GlebYavorski/carpemachinatio-home`. No GitHub Actions workflow.
+Hosted on **Cloudflare as a Worker with static assets** (the newer unified "Workers & Pages" model — NOT a classic Pages project). The sibling `road_bingo` is deployed the same way, as a Worker with static assets. Git integration via **Workers Builds** connected to `GlebYavorski/carpemachinatio-home`. No GitHub Actions workflow.
 
 - Static site: no build step, assets served from repo root.
 - Push to `main` → Cloudflare auto-builds and deploys (~30s). Verified working.
 - Custom domain: apex `carpemachinatio.com`, attached in the Worker's **Domains** tab.
 - `www.carpemachinatio.com` → 301 redirect to apex via a zone-level Redirect Rule (wildcard `https://www.*` → `https://${1}`), backed by a proxied `www` CNAME → `carpemachinatio.com`.
 - **Gotcha:** auto-deploy only works because the Cloudflare GitHub App has access to this repo. If a new repo's pushes don't deploy, check the app's repo access at github.com/settings/installations (grant "All repositories" to avoid per-repo grants).
+
+## Zone Security Settings (Cloudflare Security Insights)
+
+Cloudflare periodically emails "Security Insights" alerts for the zone (Moderate/Low — recommendations, not active vulnerabilities). Standing decisions on what to act on:
+
+- **Always Use HTTPS** — enable (SSL/TLS → Edge Certificates). One zone-wide toggle covers all subdomains. Matters most for `n8n.carpemachinatio.com` (automation with webhooks/credentials), not just the static landing page.
+- **HSTS** — enable *after* Always Use HTTPS is on and every subdomain confirmed serving HTTPS. Start with a short `max-age`; do NOT enable `includeSubDomains`/preload — a future subdomain without HTTPS would become unreachable and the policy is browser-cached (hard to roll back).
+- **Bot Fight Mode / Block AI bots / AI Labyrinth** — intentionally left OFF. This is a public landing page announced via the @carpemachinatio Telegram channel; bot blocking can break legitimate link-preview crawlers (Telegram, Twitter, etc.).
+- **Security.txt** — optional, skipped for now. Would be `/.well-known/security.txt` served from the repo if ever wanted.
